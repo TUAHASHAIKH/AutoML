@@ -81,7 +81,7 @@ PROJECTS/
 ## Deployment
 
 This application is deployed on Streamlit Cloud:
-- **Live URL**: [Your Streamlit Cloud URL will be here]
+- **Live URL**: https://automlnust.streamlit.app/
 
 ## Technologies Used
 - **Framework**: Streamlit
@@ -90,9 +90,8 @@ This application is deployed on Streamlit Cloud:
 - **Report Generation**: reportlab/pdfkit or markdown
 
 ## Team Members
-- [Student 1 Name]
-- [Student 2 Name]
-- [Student 3 Name]
+- [Muhammad Tuaha CMS 463124]
+- [Muhammad Taaha Bin Zaheer CMS 465788]
 
 ## License
 This project is for educational purposes as part of CS-245 Machine Learning course.
