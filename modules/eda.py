@@ -282,13 +282,21 @@ def get_train_test_split_summary(X_train, X_test, y_train, y_test):
         st.metric("Train/Test Ratio", f"{split_ratio:.1f}% / {100-split_ratio:.1f}%")
     
     # Class distribution in train and test
-    train_dist = pd.Series(y_train).value_counts()
-    test_dist = pd.Series(y_test).value_counts()
+    train_dist = pd.Series(y_train).value_counts().sort_index()
+    test_dist = pd.Series(y_test).value_counts().sort_index()
     
-    dist_df = pd.DataFrame({
-        'Class': train_dist.index,
-        'Train Count': train_dist.values,
-        'Test Count': test_dist.index.map(lambda x: test_dist.get(x, 0))
-    })
+    # Get all unique classes from both train and test
+    all_classes = sorted(set(list(train_dist.index) + list(test_dist.index)))
+    
+    # Create distribution dataframe with all classes
+    dist_data = []
+    for cls in all_classes:
+        dist_data.append({
+            'Class': cls,
+            'Train Count': train_dist.get(cls, 0),
+            'Test Count': test_dist.get(cls, 0)
+        })
+    
+    dist_df = pd.DataFrame(dist_data)
     
     st.dataframe(dist_df, use_container_width=True)
