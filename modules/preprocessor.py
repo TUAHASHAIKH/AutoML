@@ -207,13 +207,40 @@ class DataPreprocessor:
                 st.success(f"✓ Applied Label Encoding")
         
         # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y,
-            test_size=config['test_size'],
-            random_state=int(config['random_state']),
-            stratify=y if len(np.unique(y)) > 1 else None
-        )
-        self.preprocessing_steps.append(f"Split data: {len(X_train)} train, {len(X_test)} test")
+        # Check if stratification is possible
+        try:
+            # Try stratified split first
+            unique_classes, class_counts = np.unique(y, return_counts=True)
+            min_class_count = np.min(class_counts)
+            
+            # Only use stratify if each class has at least 2 samples
+            if len(unique_classes) > 1 and min_class_count >= 2:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y,
+                    test_size=config['test_size'],
+                    random_state=int(config['random_state']),
+                    stratify=y
+                )
+                self.preprocessing_steps.append(f"Split data with stratification: {len(X_train)} train, {len(X_test)} test")
+            else:
+                # Use regular split without stratification
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y,
+                    test_size=config['test_size'],
+                    random_state=int(config['random_state'])
+                )
+                self.preprocessing_steps.append(f"Split data without stratification: {len(X_train)} train, {len(X_test)} test")
+                if min_class_count < 2:
+                    st.warning(f"⚠️ Some classes have very few samples. Stratification disabled.")
+        except Exception as e:
+            # Fallback to simple split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y,
+                test_size=config['test_size'],
+                random_state=int(config['random_state'])
+            )
+            self.preprocessing_steps.append(f"Split data: {len(X_train)} train, {len(X_test)} test")
+        
         st.success(f"✓ Split data into train ({len(X_train)}) and test ({len(X_test)}) sets")
         
         # Scaling
