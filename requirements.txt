@@ -12,6 +12,7 @@ plotly>=5.18.0
 # Report generation
 fpdf>=1.7.2
 markdown>=3.5.0
+tabulate>=0.9.0
 
 # Data processing
 scipy>=1.11.0
