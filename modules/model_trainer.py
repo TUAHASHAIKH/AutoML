@@ -112,6 +112,21 @@ class ModelTrainer:
         self.results = {}
         self.trained_models = {}
     
+    def _record_error(self, model_name: str, error_msg: str, start_time: float) -> None:
+        """
+        Helper method to record training errors.
+        
+        Args:
+            model_name: Name of the model
+            error_msg: Error message
+            start_time: Training start time
+        """
+        self.results[model_name] = {
+            'error': error_msg,
+            'training_time': time.time() - start_time,
+            'metrics': {}
+        }
+    
     def get_model_configurations(self):
         """
         Get model configurations with hyperparameter grids.
@@ -264,29 +279,17 @@ class ModelTrainer:
                 error_msg = "Out of memory error - dataset may be too large"
                 logger.error(f"Memory error training {model_name}")
                 st.error(f"✗ {model_name}: {error_msg}")
-                self.results[model_name] = {
-                    'error': error_msg,
-                    'training_time': time.time() - start_time,
-                    'metrics': {}
-                }
+                self._record_error(model_name, error_msg, start_time)
             except ValueError as e:
                 error_msg = f"Invalid parameter or data: {str(e)}"
                 logger.error(f"ValueError training {model_name}: {error_msg}")
                 st.error(f"✗ {model_name}: {error_msg}")
-                self.results[model_name] = {
-                    'error': error_msg,
-                    'training_time': time.time() - start_time,
-                    'metrics': {}
-                }
+                self._record_error(model_name, error_msg, start_time)
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Unexpected error training {model_name}: {error_msg}")
                 st.error(f"✗ Error training {model_name}: {error_msg}")
-                self.results[model_name] = {
-                    'error': error_msg,
-                    'training_time': time.time() - start_time,
-                    'metrics': {}
-                }
+                self._record_error(model_name, error_msg, start_time)
             
             # Update progress
             progress_bar.progress((idx + 1) / len(model_configs))

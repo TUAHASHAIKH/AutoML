@@ -6,7 +6,7 @@ Handles dataset upload and displays basic information about the dataset.
 import pandas as pd
 import streamlit as st
 import numpy as np
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Any
 import logging
 
 # Configure logging
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def load_dataset(uploaded_file) -> Optional[pd.DataFrame]:
+def load_dataset(uploaded_file: Any) -> Optional[pd.DataFrame]:
     """
     Load CSV file and return as pandas DataFrame.
     

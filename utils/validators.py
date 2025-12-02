@@ -194,6 +194,10 @@ def sanitize_string(input_str: str, max_length: int = 1000) -> str:
         
     Returns:
         Sanitized string
+        
+    Note:
+        Allows alphanumeric characters, spaces, hyphens, underscores, periods, 
+        commas, and parentheses. Brackets and braces are removed for security.
     """
     if not isinstance(input_str, str):
         return str(input_str)
@@ -202,8 +206,8 @@ def sanitize_string(input_str: str, max_length: int = 1000) -> str:
     sanitized = input_str[:max_length]
     
     # Remove potentially dangerous characters
-    # Allow alphanumeric, spaces, and common punctuation
-    sanitized = re.sub(r'[^\w\s\-_.,()\[\]{}]', '', sanitized)
+    # Allow only alphanumeric, spaces, and safe punctuation (no brackets/braces)
+    sanitized = re.sub(r'[^\w\s\-_.,()]', '', sanitized)
     
     return sanitized.strip()
 
