@@ -6,9 +6,15 @@ Handles dataset upload and displays basic information about the dataset.
 import pandas as pd
 import streamlit as st
 import numpy as np
+from typing import Optional, Tuple, List
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-def load_dataset(uploaded_file):
+def load_dataset(uploaded_file) -> Optional[pd.DataFrame]:
     """
     Load CSV file and return as pandas DataFrame.
     
@@ -16,13 +22,29 @@ def load_dataset(uploaded_file):
         uploaded_file: Streamlit UploadedFile object
         
     Returns:
-        pd.DataFrame: Loaded dataset
+        pd.DataFrame: Loaded dataset, or None if loading fails
+        
+    Raises:
+        None: Exceptions are caught and logged
     """
     try:
         df = pd.read_csv(uploaded_file)
+        logger.info(f"Successfully loaded dataset with {len(df)} rows and {len(df.columns)} columns")
         return df
+    except pd.errors.EmptyDataError:
+        error_msg = "The uploaded file is empty"
+        st.error(f"Error loading file: {error_msg}")
+        logger.error(error_msg)
+        return None
+    except pd.errors.ParserError as e:
+        error_msg = f"Error parsing CSV file: {str(e)}"
+        st.error(f"Error loading file: {error_msg}")
+        logger.error(error_msg)
+        return None
     except Exception as e:
-        st.error(f"Error loading file: {str(e)}")
+        error_msg = f"Unexpected error loading file: {str(e)}"
+        st.error(f"Error loading file: {error_msg}")
+        logger.error(error_msg)
         return None
 
 
@@ -86,7 +108,7 @@ def display_basic_info(df, target_column=None):
     return col_types
 
 
-def get_column_types(df):
+def get_column_types(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     """
     Categorize columns into numerical and categorical.
     
@@ -99,10 +121,11 @@ def get_column_types(df):
     numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
+    logger.info(f"Identified {len(numerical_cols)} numerical and {len(categorical_cols)} categorical columns")
     return numerical_cols, categorical_cols
 
 
-def validate_dataset(df):
+def validate_dataset(df: pd.DataFrame) -> dict:
     """
     Perform basic validation on the dataset.
     
@@ -110,7 +133,10 @@ def validate_dataset(df):
         df: pandas DataFrame
         
     Returns:
-        dict: Dictionary containing validation results
+        dict: Dictionary containing validation results with keys:
+            - is_valid (bool): Whether dataset passes validation
+            - errors (list): List of error messages
+            - warnings (list): List of warning messages
     """
     validation_results = {
         'is_valid': True,
@@ -122,14 +148,23 @@ def validate_dataset(df):
     if df.empty:
         validation_results['is_valid'] = False
         validation_results['errors'].append("Dataset is empty")
+        logger.error("Dataset validation failed: empty dataset")
     
     # Check for minimum rows
     if len(df) < 10:
         validation_results['warnings'].append("Dataset has fewer than 10 rows. Results may not be reliable.")
+        logger.warning(f"Dataset has only {len(df)} rows")
     
     # Check for duplicate rows
     duplicates = df.duplicated().sum()
     if duplicates > 0:
         validation_results['warnings'].append(f"Found {duplicates} duplicate rows")
+        logger.warning(f"Found {duplicates} duplicate rows in dataset")
+    
+    # Check for all NaN columns
+    all_nan_cols = df.columns[df.isnull().all()].tolist()
+    if all_nan_cols:
+        validation_results['warnings'].append(f"Columns with all missing values: {', '.join(all_nan_cols)}")
+        logger.warning(f"Found columns with all NaN values: {all_nan_cols}")
     
     return validation_results

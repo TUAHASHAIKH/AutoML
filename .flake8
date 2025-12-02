@@ -1,0 +1,30 @@
+[flake8]
+# Flake8 configuration for code style checking
+max-line-length = 120
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .eggs,
+    *.egg-info,
+    .venv,
+    venv,
+    env
+
+# Ignore specific errors
+ignore = 
+    E203,  # whitespace before ':'
+    E501,  # line too long (handled by max-line-length)
+    W503,  # line break before binary operator
+    E402,  # module level import not at top of file
+
+# Enable specific warnings
+select = E,W,F,C90
+
+# Complexity settings
+max-complexity = 15
+
+# Per-file ignores
+per-file-ignores =
+    __init__.py:F401
