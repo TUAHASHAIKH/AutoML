@@ -33,28 +33,23 @@ def timeit(func: Callable) -> Callable:
     return wrapper
 
 
-def memoize(func: Callable) -> Callable:
+def memoize(maxsize: int = 128) -> Callable:
     """
-    Simple memoization decorator for expensive computations.
+    Memoization decorator with size limit for expensive computations.
     
     Args:
-        func: Function to memoize
+        maxsize: Maximum cache size (default: 128)
         
     Returns:
         Memoized function
+        
+    Note:
+        Uses functools.lru_cache internally for bounded caching
     """
-    cache = {}
+    def decorator(func: Callable) -> Callable:
+        return functools.lru_cache(maxsize=maxsize)(func)
     
-    @functools.wraps(func)
-    def wrapper(*args):
-        if args in cache:
-            logger.debug(f"Cache hit for {func.__name__}")
-            return cache[args]
-        result = func(*args)
-        cache[args] = result
-        return result
-    
-    return wrapper
+    return decorator
 
 
 def streamlit_cache(func: Callable) -> Callable:

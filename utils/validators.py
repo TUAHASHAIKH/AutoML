@@ -9,6 +9,9 @@ from typing import Union, List, Optional, Tuple
 import re
 import logging
 
+# Safe characters pattern for string sanitization
+SAFE_CHARS_PATTERN = r'[^\w\s\-_.,()]'
+
 logger = logging.getLogger(__name__)
 
 
@@ -146,13 +149,17 @@ def validate_file_extension(filename: str, allowed_extensions: List[str]) -> boo
     Returns:
         True if valid, raises ValidationError otherwise
     """
+    import os
+    
     if not filename:
         raise ValidationError("Filename cannot be empty")
     
-    file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
+    # Use os.path.splitext for robust extension extraction
+    _, file_ext = os.path.splitext(filename.lower())
+    file_ext = file_ext.lstrip('.')  # Remove leading dot
     
     # Normalize extensions
-    allowed_exts = [ext.lower().replace('.', '') for ext in allowed_extensions]
+    allowed_exts = [ext.lower().replace('.', '').strip() for ext in allowed_extensions]
     
     if file_ext not in allowed_exts:
         raise ValidationError(
@@ -205,9 +212,9 @@ def sanitize_string(input_str: str, max_length: int = 1000) -> str:
     # Trim to max length
     sanitized = input_str[:max_length]
     
-    # Remove potentially dangerous characters
+    # Remove potentially dangerous characters using pattern constant
     # Allow only alphanumeric, spaces, and safe punctuation (no brackets/braces)
-    sanitized = re.sub(r'[^\w\s\-_.,()]', '', sanitized)
+    sanitized = re.sub(SAFE_CHARS_PATTERN, '', sanitized)
     
     return sanitized.strip()
 
