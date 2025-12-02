@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import time
+import logging
+from typing import Dict, Any, Optional, Tuple
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -19,6 +21,10 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                             classification_report, roc_curve)
 import warnings
 warnings.filterwarnings('ignore')
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class RuleBasedClassifier:
@@ -165,7 +171,7 @@ class ModelTrainer:
             }
         }
     
-    def train_all_models(self, optimization_method='grid', n_iter=10):
+    def train_all_models(self, optimization_method: str = 'grid', n_iter: int = 10) -> Dict[str, Any]:
         """
         Train all models with hyperparameter optimization.
         
@@ -175,7 +181,14 @@ class ModelTrainer:
             
         Returns:
             dict: Training results for all models
+            
+        Raises:
+            ValueError: If optimization_method is invalid
         """
+        if optimization_method not in ['grid', 'random']:
+            raise ValueError(f"Invalid optimization_method: {optimization_method}. Must be 'grid' or 'random'")
+        
+        logger.info(f"Starting model training with {optimization_method} search")
         st.header("🤖 Model Training & Hyperparameter Optimization")
         
         model_configs = self.get_model_configurations()
@@ -184,6 +197,7 @@ class ModelTrainer:
         
         for idx, (model_name, config) in enumerate(model_configs.items()):
             status_text.text(f"Training {model_name}...")
+            logger.info(f"Training model: {model_name}")
             
             start_time = time.time()
             
@@ -243,13 +257,34 @@ class ModelTrainer:
                 
                 self.trained_models[model_name] = best_model
                 
+                logger.info(f"Successfully trained {model_name} in {training_time:.2f}s")
                 st.success(f"✓ {model_name} trained successfully in {training_time:.2f}s")
                 
-            except Exception as e:
-                st.error(f"✗ Error training {model_name}: {str(e)}")
+            except MemoryError:
+                error_msg = "Out of memory error - dataset may be too large"
+                logger.error(f"Memory error training {model_name}")
+                st.error(f"✗ {model_name}: {error_msg}")
                 self.results[model_name] = {
-                    'error': str(e),
-                    'training_time': 0,
+                    'error': error_msg,
+                    'training_time': time.time() - start_time,
+                    'metrics': {}
+                }
+            except ValueError as e:
+                error_msg = f"Invalid parameter or data: {str(e)}"
+                logger.error(f"ValueError training {model_name}: {error_msg}")
+                st.error(f"✗ {model_name}: {error_msg}")
+                self.results[model_name] = {
+                    'error': error_msg,
+                    'training_time': time.time() - start_time,
+                    'metrics': {}
+                }
+            except Exception as e:
+                error_msg = str(e)
+                logger.error(f"Unexpected error training {model_name}: {error_msg}")
+                st.error(f"✗ Error training {model_name}: {error_msg}")
+                self.results[model_name] = {
+                    'error': error_msg,
+                    'training_time': time.time() - start_time,
                     'metrics': {}
                 }
             
@@ -257,7 +292,11 @@ class ModelTrainer:
             progress_bar.progress((idx + 1) / len(model_configs))
         
         status_text.text("Training complete!")
-        st.success("✅ All models trained successfully!")
+        logger.info("All model training complete")
+        
+        # Count successful models
+        successful_models = sum(1 for r in self.results.values() if 'error' not in r)
+        st.success(f"✅ {successful_models}/{len(model_configs)} models trained successfully!")
         
         return self.results
     
