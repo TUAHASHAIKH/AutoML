@@ -210,18 +210,28 @@ def distribution_plots(df, numerical_cols):
         n_rows = (len(selected_cols) + 1) // 2
         
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 4*n_rows))
-        axes = axes.flatten() if n_rows > 1 else [axes] if n_rows == 1 else axes
+        
+        # Handle different subplot configurations
+        if n_rows == 1 and n_cols == 1:
+            axes = np.array([axes])
+        elif n_rows == 1:
+            axes = axes.reshape(1, -1)
+        elif n_cols == 1:
+            axes = axes.reshape(-1, 1)
+        
+        # Flatten axes for easier iteration
+        axes_flat = axes.flatten()
         
         for idx, col in enumerate(selected_cols):
-            if idx < len(axes):
-                axes[idx].hist(df[col].dropna(), bins=30, edgecolor='black', alpha=0.7)
-                axes[idx].set_title(f'Distribution of {col}')
-                axes[idx].set_xlabel(col)
-                axes[idx].set_ylabel('Frequency')
+            if idx < len(axes_flat):
+                axes_flat[idx].hist(df[col].dropna(), bins=30, edgecolor='black', alpha=0.7)
+                axes_flat[idx].set_title(f'Distribution of {col}')
+                axes_flat[idx].set_xlabel(col)
+                axes_flat[idx].set_ylabel('Frequency')
         
         # Hide extra subplots
-        for idx in range(len(selected_cols), len(axes)):
-            axes[idx].set_visible(False)
+        for idx in range(len(selected_cols), len(axes_flat)):
+            axes_flat[idx].set_visible(False)
         
         plt.tight_layout()
         st.pyplot(fig)
