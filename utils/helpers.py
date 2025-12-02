@@ -22,6 +22,30 @@ def apply_custom_css():
     """Apply custom CSS styling."""
     st.markdown("""
         <style>
+        /* Hide GitHub icon and deploy button */
+        header[data-testid="stHeader"] {
+            background-color: transparent;
+        }
+        .stApp header {
+            background-color: transparent;
+        }
+        /* Hide the entire toolbar */
+        [data-testid="stToolbar"] {
+            display: none;
+        }
+        /* Alternative: Hide specific elements in toolbar */
+        button[kind="header"] {
+            display: none;
+        }
+        /* Hide GitHub link */
+        a[href*="github.com"] {
+            display: none !important;
+        }
+        /* Hide menu button */
+        [data-testid="stToolbar"] > button {
+            display: none;
+        }
+        
         .main-header {
             font-size: 3rem;
             font-weight: bold;
