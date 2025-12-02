@@ -13,3 +13,10 @@ runOnSave = false
 
 [runner]
 fastReruns = false
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
