@@ -154,9 +154,9 @@ class ModelTrainer:
             'Support Vector Machine': {
                 'model': SVC(probability=True, random_state=42),
                 'params': {
-                    'C': [0.1, 1, 10],
-                    'kernel': ['rbf', 'linear'],
-                    'gamma': ['scale', 'auto']
+                    'C': [0.1, 1],  # Reduced from 3 to 2 values
+                    'kernel': ['rbf'],  # Only RBF kernel (best for most cases)
+                    'gamma': ['scale']  # Only scale (recommended default)
                 }
             },
             'Rule-Based Classifier': {
@@ -190,23 +190,29 @@ class ModelTrainer:
             try:
                 # Train model
                 if config['params'] and model_name != 'Rule-Based Classifier':
+                    # Use fewer CV folds for large datasets to speed up training
+                    n_samples = len(self.X_train)
+                    cv_folds = 3 if n_samples > 2000 else min(5, n_samples)
+                    
                     if optimization_method == 'grid':
                         search = GridSearchCV(
                             config['model'],
                             config['params'],
-                            cv=min(5, len(self.X_train)),
+                            cv=cv_folds,
                             scoring='f1_weighted',
-                            n_jobs=-1
+                            n_jobs=-1,
+                            verbose=1  # Show progress
                         )
                     else:  # random
                         search = RandomizedSearchCV(
                             config['model'],
                             config['params'],
                             n_iter=n_iter,
-                            cv=min(5, len(self.X_train)),
+                            cv=cv_folds,
                             scoring='f1_weighted',
                             random_state=42,
-                            n_jobs=-1
+                            n_jobs=-1,
+                            verbose=1  # Show progress
                         )
                     
                     search.fit(self.X_train, self.y_train)
