@@ -1,6 +1,7 @@
 """
 Main Streamlit Application
 AutoML System for Classification Tasks
+Version: 1.0.1
 """
 
 import streamlit as st
