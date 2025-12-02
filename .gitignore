@@ -46,6 +46,7 @@ Thumbs.db
 # Data files (except sample)
 *.csv
 !sample_data/sample_dataset.csv
+!sample_data/customer_churn_dataset.csv
 
 # Logs
 *.log
