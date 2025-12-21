@@ -13,7 +13,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                             f1_score, confusion_matrix, roc_auc_score, 
                             classification_report, roc_curve)
@@ -118,7 +118,7 @@ class ModelTrainer:
                 'model': LogisticRegression(max_iter=1000, random_state=42),
                 'params': {
                     'C': [0.01, 0.1, 1, 10],
-                    'solver': ['lbfgs', 'liblinear']
+                    'solver': ['lbfgs', 'saga']  # Changed from liblinear to saga for multiclass support
                 }
             },
             'K-Nearest Neighbors': {
@@ -188,17 +188,38 @@ class ModelTrainer:
             start_time = time.time()
             
             try:
+                # Check class distribution before training
+                unique_classes = np.unique(self.y_train)
+                n_classes = len(unique_classes)
+                
+                if n_classes < 2:
+                    st.error(f"⚠️ {model_name}: Training data contains only {n_classes} class(es). Skipping this model.")
+                    raise ValueError(f"Training data contains only {n_classes} class(es). Need at least 2 classes for classification.")
+                
+                # Count samples per class
+                class_counts = pd.Series(self.y_train).value_counts()
+                min_class_count = class_counts.min()
+                
+                # Warn if class count is very low
+                if min_class_count < 5:
+                    st.warning(f"⚠️ {model_name}: Smallest class has only {min_class_count} samples. Results may be unreliable.")
+                
                 # Train model
                 if config['params'] and model_name != 'Rule-Based Classifier':
-                    # Use fewer CV folds for large datasets to speed up training
+                    # Use fewer CV folds for large datasets or imbalanced data
                     n_samples = len(self.X_train)
-                    cv_folds = 3 if n_samples > 2000 else min(5, n_samples)
+                    # Ensure cv_folds doesn't exceed minimum class count
+                    cv_folds = min(3 if n_samples > 2000 else 5, min_class_count)
+                    cv_folds = max(2, cv_folds)  # Ensure at least 2 folds
+                    
+                    # Use stratified K-fold to maintain class distribution
+                    cv_strategy = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42)
                     
                     if optimization_method == 'grid':
                         search = GridSearchCV(
                             config['model'],
                             config['params'],
-                            cv=cv_folds,
+                            cv=cv_strategy,  # Use stratified CV
                             scoring='f1_weighted',
                             n_jobs=-1,
                             verbose=1  # Show progress
@@ -208,7 +229,7 @@ class ModelTrainer:
                             config['model'],
                             config['params'],
                             n_iter=n_iter,
-                            cv=cv_folds,
+                            cv=cv_strategy,  # Use stratified CV
                             scoring='f1_weighted',
                             random_state=42,
                             n_jobs=-1,

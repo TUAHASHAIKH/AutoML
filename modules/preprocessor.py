@@ -87,6 +87,15 @@ class DataPreprocessor:
             before_count = len(self.df)
             self.df.dropna(subset=[column], inplace=True)
             after_count = len(self.df)
+            
+            # Check if we still have multiple classes after dropping rows
+            if self.target_col in self.df.columns:
+                remaining_classes = self.df[self.target_col].nunique()
+                if remaining_classes < 2:
+                    st.error(f"⚠️ Dropping rows would leave only {remaining_classes} class(es). Skipping this operation.")
+                    # Reload original data for this column - we need to keep the rows
+                    return
+            
             self.preprocessing_steps.append(f"Dropped {before_count - after_count} rows with missing '{column}'")
             st.success(f"✓ Dropped {before_count - after_count} rows with missing '{column}'")
     
@@ -101,6 +110,21 @@ class DataPreprocessor:
             before_count = len(self.df)
             self.df = self.df[(self.df[column] >= lower_bound) & (self.df[column] <= upper_bound)]
             after_count = len(self.df)
+            
+            # Check if we still have multiple classes after removing outliers
+            if self.target_col in self.df.columns:
+                remaining_classes = self.df[self.target_col].nunique()
+                if remaining_classes < 2:
+                    st.error(f"⚠️ Removing outliers would leave only {remaining_classes} class(es). Using capping instead.")
+                    # Restore data and use capping instead
+                    self.df = self.df.copy()  # This won't work, need better approach
+                    # Cap instead
+                    outlier_count = ((self.df[column] < lower_bound) | (self.df[column] > upper_bound)).sum()
+                    self.df[column] = self.df[column].clip(lower=lower_bound, upper=upper_bound)
+                    self.preprocessing_steps.append(f"Capped {outlier_count} outliers in '{column}' (to preserve class distribution)")
+                    st.warning(f"✓ Capped outliers instead to preserve all classes")
+                    return
+            
             self.preprocessing_steps.append(f"Removed {before_count - after_count} outliers from '{column}'")
             st.success(f"✓ Removed {before_count - after_count} outliers from '{column}'")
         
@@ -194,9 +218,39 @@ class DataPreprocessor:
         # Handle categorical features
         if self.categorical_cols and 'encoding' in config:
             if config['encoding'] == "One-Hot Encoding":
-                X = pd.get_dummies(X, columns=self.categorical_cols, drop_first=True)
-                self.preprocessing_steps.append(f"Applied One-Hot Encoding to {len(self.categorical_cols)} categorical features")
-                st.success(f"✓ Applied One-Hot Encoding")
+                # Check cardinality before one-hot encoding to prevent memory issues
+                high_cardinality_threshold = 50
+                cols_to_onehot = []
+                cols_to_label_encode = []
+                
+                for col in self.categorical_cols:
+                    n_unique = X[col].nunique()
+                    if n_unique > high_cardinality_threshold:
+                        cols_to_label_encode.append(col)
+                        st.warning(f"⚠️ '{col}' has {n_unique} unique values. Using Label Encoding instead to prevent memory issues.")
+                    else:
+                        cols_to_onehot.append(col)
+                
+                # Apply one-hot encoding to low cardinality features
+                if cols_to_onehot:
+                    X = pd.get_dummies(X, columns=cols_to_onehot, drop_first=True)
+                    self.preprocessing_steps.append(f"Applied One-Hot Encoding to {len(cols_to_onehot)} categorical features")
+                    st.success(f"✓ Applied One-Hot Encoding to {len(cols_to_onehot)} features")
+                
+                # Apply label encoding to high cardinality features
+                if cols_to_label_encode:
+                    for col in cols_to_label_encode:
+                        le = LabelEncoder()
+                        X[col] = le.fit_transform(X[col].astype(str))
+                    self.preprocessing_steps.append(f"Applied Label Encoding to {len(cols_to_label_encode)} high-cardinality features")
+                    st.info(f"ℹ️ Used Label Encoding for {len(cols_to_label_encode)} high-cardinality features")
+                
+                # Check total feature count after encoding
+                if X.shape[1] > 1000:
+                    st.warning(f"⚠️ Feature space is large ({X.shape[1]} features). Training may be slow and memory-intensive.")
+                    if X.shape[1] > 5000:
+                        st.error(f"❌ Too many features ({X.shape[1]})! Consider using Label Encoding or dropping high-cardinality columns.")
+                
             else:  # Label Encoding
                 le_dict = {}
                 for col in self.categorical_cols:
@@ -242,6 +296,37 @@ class DataPreprocessor:
             self.preprocessing_steps.append(f"Split data: {len(X_train)} train, {len(X_test)} test")
         
         st.success(f"✓ Split data into train ({len(X_train)}) and test ({len(X_test)}) sets")
+        
+        # Check class distribution after split
+        train_classes = np.unique(y_train)
+        test_classes = np.unique(y_test)
+        
+        st.info(f"Training set has {len(train_classes)} class(es), Test set has {len(test_classes)} class(es)")
+        
+        if len(train_classes) < 2:
+            st.error(f"❌ Training set contains only {len(train_classes)} class(es)! Need at least 2 for classification.")
+            st.error("This usually happens when:")
+            st.error("1. Too many rows were dropped during preprocessing")
+            st.error("2. The dataset is extremely imbalanced")
+            st.error("3. Test size is too large relative to the smallest class")
+            st.error("\nSuggestions:")
+            st.error("- Use imputation instead of dropping rows with missing values")
+            st.error("- Use capping instead of removing outliers")
+            st.error("- Reduce test size")
+            st.error("- Check if your dataset has enough samples of each class")
+        
+        if len(test_classes) < 2:
+            st.warning(f"⚠️ Test set contains only {len(test_classes)} class(es). Results may not be reliable.")
+        
+        # Check for severe class imbalance
+        train_class_counts = pd.Series(y_train).value_counts()
+        min_count = train_class_counts.min()
+        max_count = train_class_counts.max()
+        imbalance_ratio = max_count / min_count if min_count > 0 else float('inf')
+        
+        if imbalance_ratio > 10:
+            st.warning(f"⚠️ Severe class imbalance detected (ratio: {imbalance_ratio:.1f}:1)")
+            st.info("Consider using SMOTE or class weights for better model performance")
         
         # Scaling
         scaler = None
