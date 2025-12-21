@@ -153,10 +153,10 @@ class IssueDetector:
             dict: User decisions for each issue
         """
         if not self.issues:
-            st.success("✅ No data quality issues detected!")
+            st.success("No data quality issues detected!")
             return {}
         
-        st.header("⚠️ Data Quality Issues Detected")
+        st.header("Data Quality Issues Detected")
         st.write(f"Found **{len(self.issues)}** potential issues:")
         
         # Group issues by severity
@@ -166,9 +166,9 @@ class IssueDetector:
         
         # Display issues by severity
         for severity, issues_list, color in [
-            ('High', high_severity, '🔴'),
-            ('Medium', medium_severity, '🟡'),
-            ('Low', low_severity, '🟢')
+            ('High', high_severity, '[HIGH]'),
+            ('Medium', medium_severity, '[MED]'),
+            ('Low', low_severity, '[LOW]')
         ]:
             if issues_list:
                 st.subheader(f"{color} {severity} Severity Issues ({len(issues_list)})")

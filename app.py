@@ -43,7 +43,7 @@ def main():
     """Main application function."""
     
     # Step 1: Dataset Upload
-    st.header("📁 Step 1: Upload Dataset")
+    st.header("Step 1: Upload Dataset")
     
     uploaded_file = st.file_uploader(
         "Upload your CSV file",
@@ -72,7 +72,7 @@ def main():
             show_success_message(f"Dataset loaded successfully! ({len(df)} rows, {len(df.columns)} columns)")
             
             # Select target column
-            st.subheader("🎯 Select Target Column")
+            st.subheader("Select Target Column")
             target_col = st.selectbox(
                 "Select the target column for classification:",
                 options=df.columns.tolist(),
@@ -101,20 +101,24 @@ def main():
             st.markdown("---")
             
             # Step 2: Exploratory Data Analysis
-            st.header("🔍 Step 2: Exploratory Data Analysis")
+            st.header("Step 2: Exploratory Data Analysis")
             
-            if st.button("🔍 Run Automated EDA", type="primary"):
+            if st.button("Run Automated EDA", type="primary", key="run_eda_btn"):
                 with st.spinner("Performing EDA..."):
                     perform_eda(df, numerical_cols, categorical_cols)
                     st.session_state.eda_complete = True
                     show_success_message("EDA completed successfully!")
             
+            # Display EDA results if already completed
+            elif st.session_state.eda_complete:
+                perform_eda(df, numerical_cols, categorical_cols)
+            
             st.markdown("---")
             
             # Step 3: Issue Detection
-            st.header("⚠️ Step 3: Data Quality Issue Detection")
+            st.header("Step 3: Data Quality Issue Detection")
             
-            if st.button("🔍 Detect Data Issues", type="primary"):
+            if st.button("Detect Data Issues", type="primary", key="detect_issues_btn"):
                 with st.spinner("Detecting data quality issues..."):
                     # Create issue detector
                     issue_detector = IssueDetector(
@@ -125,42 +129,66 @@ def main():
                     issues = issue_detector.detect_all_issues()
                     st.session_state.issues = issues
                     st.session_state.issue_detector = issue_detector
-                    
-                    # Display issues and get user approval
-                    user_decisions = issue_detector.display_issues_and_get_approval()
-                    st.session_state.user_decisions = user_decisions
-                    
-                    # Display issue summary
-                    if issues:
-                        summary = issue_detector.get_issues_summary()
-                        st.subheader("📋 Issue Summary")
-                        st.dataframe(summary, use_container_width=True)
+                    st.session_state.issues_detected = True
+            
+            # Display issues and get user approval if issues have been detected
+            if st.session_state.get('issues_detected', False) and hasattr(st.session_state, 'issue_detector'):
+                issue_detector = st.session_state.issue_detector
+                issues = st.session_state.issues
+                
+                # Display issues and get user approval
+                user_decisions = issue_detector.display_issues_and_get_approval()
+                st.session_state.user_decisions = user_decisions
+                
+                # Display issue summary
+                if issues:
+                    summary = issue_detector.get_issues_summary()
+                    st.subheader("Issue Summary")
+                    st.dataframe(summary, use_container_width=True)
             
             st.markdown("---")
             
             # Step 4: Preprocessing
-            st.header("⚙️ Step 4: Data Preprocessing")
+            st.header("Step 4: Data Preprocessing")
             
-            if st.button("⚙️ Configure Preprocessing", type="primary"):
+            if st.button("Configure Preprocessing", type="primary", key="config_preprocessing_btn"):
+                # Set flag to show configuration
+                st.session_state.preprocessing_configured = True
+                
                 # Create preprocessor
-                preprocessor = DataPreprocessor(
-                    df, numerical_cols, categorical_cols, target_col
-                )
+                if not hasattr(st.session_state, 'preprocessor'):
+                    preprocessor = DataPreprocessor(
+                        df, numerical_cols, categorical_cols, target_col
+                    )
+                    
+                    # Apply user decisions from issue detection
+                    if hasattr(st.session_state, 'user_decisions'):
+                        preprocessor.apply_user_decisions(st.session_state.user_decisions)
+                    
+                    st.session_state.preprocessor = preprocessor
+            
+            # Display preprocessing configuration form if configured
+            if st.session_state.get('preprocessing_configured', False) and not st.session_state.preprocessing_complete:
+                # Create or get preprocessor
+                if not hasattr(st.session_state, 'preprocessor'):
+                    preprocessor = DataPreprocessor(
+                        df, numerical_cols, categorical_cols, target_col
+                    )
+                    if hasattr(st.session_state, 'user_decisions'):
+                        preprocessor.apply_user_decisions(st.session_state.user_decisions)
+                    st.session_state.preprocessor = preprocessor
+                else:
+                    preprocessor = st.session_state.preprocessor
                 
-                # Apply user decisions from issue detection
-                if hasattr(st.session_state, 'user_decisions'):
-                    preprocessor.apply_user_decisions(st.session_state.user_decisions)
-                
-                # Get preprocessing configuration
+                # Get preprocessing configuration (this will display the form)
                 config = preprocessor.configure_preprocessing()
                 st.session_state.preprocessing_config = config
-                st.session_state.preprocessor = preprocessor
                 
                 show_info_message("Preprocessing configuration saved. Click 'Apply Preprocessing' to proceed.")
             
             # Apply preprocessing
             if hasattr(st.session_state, 'preprocessing_config'):
-                if st.button("✅ Apply Preprocessing", type="primary"):
+                if st.button("Apply Preprocessing", type="primary", key="apply_preprocessing_btn"):
                     with st.spinner("Applying preprocessing transformations..."):
                         preprocessor = st.session_state.preprocessor
                         config = st.session_state.preprocessing_config
@@ -183,11 +211,22 @@ def main():
                         get_train_test_split_summary(X_train, X_test, y_train, y_test)
                         
                         show_success_message("Preprocessing completed successfully!")
+                
+                # Display summary if preprocessing is complete
+                elif st.session_state.preprocessing_complete:
+                    preprocessor = st.session_state.preprocessor
+                    preprocessor.display_preprocessing_summary()
+                    get_train_test_split_summary(
+                        st.session_state.X_train,
+                        st.session_state.X_test,
+                        st.session_state.y_train,
+                        st.session_state.y_test
+                    )
             
             st.markdown("---")
             
             # Step 5: Model Training
-            st.header("🤖 Step 5: Model Training & Hyperparameter Optimization")
+            st.header("Step 5: Model Training & Hyperparameter Optimization")
             
             if st.session_state.preprocessing_complete:
                 col1, col2 = st.columns(2)
@@ -209,7 +248,7 @@ def main():
                     else:
                         n_iter = 10
                 
-                if st.button("🚀 Train All Models", type="primary"):
+                if st.button("Train All Models", type="primary", key="train_models_btn"):
                     with st.spinner("Training models... This may take a few minutes..."):
                         # Create model trainer
                         trainer = ModelTrainer(
@@ -232,10 +271,10 @@ def main():
                 
                 # Display individual model results
                 if st.session_state.models_trained:
-                    st.subheader("🔍 View Individual Model Results")
+                    st.subheader("View Individual Model Results")
                     
                     model_names = list(st.session_state.model_results.keys())
-                    selected_model = st.selectbox("Select a model to view details:", model_names)
+                    selected_model = st.selectbox("Select a model to view details:", model_names, key="model_selector")
                     
                     if selected_model:
                         st.session_state.trainer.display_individual_results(selected_model)
@@ -245,22 +284,27 @@ def main():
             st.markdown("---")
             
             # Step 6: Model Comparison
-            st.header("📊 Step 6: Model Comparison Dashboard")
+            st.header("Step 6: Model Comparison Dashboard")
             
             if st.session_state.models_trained:
-                # Create evaluator
-                evaluator = ModelEvaluator(st.session_state.model_results)
-                
-                # Display comparison dashboard
-                comparison_df, best_model_name = evaluator.display_comparison_dashboard()
-                
-                # Store in session state
-                st.session_state.comparison_df = comparison_df
-                st.session_state.best_model_name = best_model_name
-                st.session_state.evaluator = evaluator
+                # Create evaluator (or reuse from session state)
+                if not hasattr(st.session_state, 'evaluator') or st.session_state.evaluator is None:
+                    evaluator = ModelEvaluator(st.session_state.model_results)
+                    
+                    # Display comparison dashboard
+                    comparison_df, best_model_name = evaluator.display_comparison_dashboard()
+                    
+                    # Store in session state
+                    st.session_state.comparison_df = comparison_df
+                    st.session_state.best_model_name = best_model_name
+                    st.session_state.evaluator = evaluator
+                else:
+                    # Reuse existing evaluator
+                    evaluator = st.session_state.evaluator
+                    evaluator.display_comparison_dashboard()
                 
                 # Display confusion matrices
-                if st.checkbox("Show Confusion Matrices for All Models"):
+                if st.checkbox("Show Confusion Matrices for All Models", key="show_confusion_matrices"):
                     evaluator.display_confusion_matrices()
             else:
                 show_info_message("Please train models first.")
@@ -268,10 +312,10 @@ def main():
             st.markdown("---")
             
             # Step 7: Generate Report
-            st.header("📄 Step 7: Generate Evaluation Report")
+            st.header("Step 7: Generate Evaluation Report")
             
             if st.session_state.models_trained:
-                if st.button("📄 Generate Comprehensive Report", type="primary"):
+                if st.button("Generate Comprehensive Report", type="primary", key="generate_report_btn"):
                     with st.spinner("Generating report..."):
                         # Prepare data for report
                         dataset_info = {
@@ -311,14 +355,22 @@ def main():
                         # Display and download report
                         report_gen.display_and_download_report()
                         
+                        # Store report generated flag
+                        st.session_state.report_generated = True
+                        st.session_state.report_gen = report_gen
+                        
                         show_success_message("Report generated successfully!")
+                
+                # Display report if already generated
+                elif st.session_state.get('report_generated', False) and hasattr(st.session_state, 'report_gen'):
+                    st.session_state.report_gen.display_and_download_report()
             else:
                 show_info_message("Please train models before generating report.")
     
     else:
         # Display instructions
         st.info("""
-        👆 **Get Started:**
+        **Get Started:**
         
         1. Upload a CSV file containing your classification dataset
         2. The system will automatically guide you through:
@@ -338,7 +390,7 @@ def main():
         """)
         
         # Display sample data format
-        with st.expander("📝 Sample Dataset Format"):
+        with st.expander("Sample Dataset Format"):
             st.write("Your CSV should have the following structure:")
             sample_data = pd.DataFrame({
                 'feature_1': [1, 2, 3, 4, 5],

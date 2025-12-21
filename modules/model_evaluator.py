@@ -60,7 +60,7 @@ class ModelEvaluator:
     
     def display_comparison_dashboard(self):
         """Display comprehensive model comparison dashboard."""
-        st.header("📊 Model Comparison Dashboard")
+        st.header("Model Comparison Dashboard")
         
         # Get comparison table
         comparison_df = self.create_comparison_table()
@@ -70,7 +70,7 @@ class ModelEvaluator:
             return
         
         # Display comparison table
-        st.subheader("📋 Performance Comparison Table")
+        st.subheader("Performance Comparison Table")
         
         # Highlight best values
         styled_df = comparison_df.style.highlight_max(
@@ -128,7 +128,7 @@ class ModelEvaluator:
         Args:
             comparison_df: Comparison DataFrame
         """
-        st.subheader("📈 Performance Visualizations")
+        st.subheader("Performance Visualizations")
         
         # Metrics bar chart
         metrics_to_plot = ['Accuracy', 'Precision', 'Recall', 'F1-Score']

@@ -176,7 +176,7 @@ class ModelTrainer:
         Returns:
             dict: Training results for all models
         """
-        st.header("🤖 Model Training & Hyperparameter Optimization")
+        st.header("Model Training & Hyperparameter Optimization")
         
         model_configs = self.get_model_configurations()
         progress_bar = st.progress(0)
@@ -257,7 +257,7 @@ class ModelTrainer:
             progress_bar.progress((idx + 1) / len(model_configs))
         
         status_text.text("Training complete!")
-        st.success("✅ All models trained successfully!")
+        st.success("All models trained successfully!")
         
         return self.results
     
@@ -334,7 +334,7 @@ class ModelTrainer:
             st.error(f"Error: {result['error']}")
             return
         
-        st.subheader(f"📊 {model_name} - Detailed Results")
+        st.subheader(f"{model_name} - Detailed Results")
         
         # Metrics
         col1, col2, col3, col4 = st.columns(4)

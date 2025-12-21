@@ -308,7 +308,7 @@ class ReportGenerator:
     
     def display_and_download_report(self):
         """Display report and provide download options."""
-        st.header("📄 Auto-Generated Evaluation Report")
+        st.header("Auto-Generated Evaluation Report")
         
         # Generate reports
         markdown_report = self.generate_markdown_report()

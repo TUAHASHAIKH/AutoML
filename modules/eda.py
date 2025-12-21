@@ -22,7 +22,7 @@ def perform_eda(df, numerical_cols, categorical_cols):
         numerical_cols: List of numerical column names
         categorical_cols: List of categorical column names
     """
-    st.header("🔍 Automated Exploratory Data Analysis")
+    st.header("Automated Exploratory Data Analysis")
     
     # Missing value analysis
     missing_analysis(df)
@@ -51,7 +51,7 @@ def missing_analysis(df):
     Args:
         df: pandas DataFrame
     """
-    st.subheader("❓ Missing Value Analysis")
+    st.subheader("Missing Value Analysis")
     
     missing_data = pd.DataFrame({
         'Column': df.columns,
@@ -63,7 +63,7 @@ def missing_analysis(df):
     )
     
     if len(missing_data) == 0:
-        st.success("✅ No missing values found in the dataset!")
+        st.success("No missing values found in the dataset!")
     else:
         col1, col2 = st.columns(2)
         
@@ -196,7 +196,7 @@ def distribution_plots(df, numerical_cols):
         df: pandas DataFrame
         numerical_cols: List of numerical column names
     """
-    st.subheader("📊 Distribution Plots for Numerical Features")
+    st.subheader("Distribution Plots for Numerical Features")
     
     # Select columns to plot
     selected_cols = st.multiselect(
@@ -268,7 +268,7 @@ def categorical_analysis(df, categorical_cols):
             # Show cardinality warning
             unique_count = df[col].nunique()
             if unique_count > 20:
-                st.warning(f"⚠️ High cardinality detected: {col} has {unique_count} unique values")
+                st.warning(f"High cardinality detected: {col} has {unique_count} unique values")
 
 
 def get_train_test_split_summary(X_train, X_test, y_train, y_test):
@@ -279,7 +279,7 @@ def get_train_test_split_summary(X_train, X_test, y_train, y_test):
         X_train, X_test: Feature sets
         y_train, y_test: Target sets
     """
-    st.subheader("✂️ Train/Test Split Summary")
+    st.subheader("Train/Test Split Summary")
     
     col1, col2, col3 = st.columns(3)
     

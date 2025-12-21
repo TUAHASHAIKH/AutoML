@@ -47,7 +47,7 @@ def display_basic_info(df, target_column=None):
         st.metric("Memory Usage", f"{df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
     
     # Column types
-    st.subheader("🔤 Column Types")
+    st.subheader(" Column Types")
     col_types = pd.DataFrame({
         'Column': df.columns,
         'Data Type': df.dtypes.values,
@@ -57,7 +57,7 @@ def display_basic_info(df, target_column=None):
     st.dataframe(col_types, use_container_width=True)
     
     # Summary statistics
-    st.subheader("📈 Summary Statistics")
+    st.subheader("Summary Statistics")
     st.dataframe(df.describe(include='all').T, use_container_width=True)
     
     # Class distribution (if target column is specified)

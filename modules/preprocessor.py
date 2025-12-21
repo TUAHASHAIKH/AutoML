@@ -37,7 +37,7 @@ class DataPreprocessor:
         Args:
             user_decisions: Dictionary of user decisions from IssueDetector
         """
-        st.subheader("🔧 Applying Preprocessing Steps")
+        st.subheader("Applying Preprocessing Steps")
         
         for key, decision in user_decisions.items():
             issue = decision['issue']
@@ -128,7 +128,7 @@ class DataPreprocessor:
         Returns:
             dict: Preprocessing configuration
         """
-        st.header("⚙️ Preprocessing Configuration")
+        st.header("Preprocessing Configuration")
         
         config = {}
         
@@ -142,14 +142,14 @@ class DataPreprocessor:
         
         # Encoding
         if self.categorical_cols:
-            st.subheader("🔤 Categorical Encoding")
+            st.subheader(" Categorical Encoding")
             config['encoding'] = st.selectbox(
                 "Select encoding method for categorical features:",
                 ["One-Hot Encoding", "Label Encoding"]
             )
         
         # Train-test split
-        st.subheader("✂️ Train-Test Split")
+        st.subheader("Train-Test Split")
         config['test_size'] = st.slider(
             "Test set size (%)",
             min_value=10,
@@ -231,7 +231,7 @@ class DataPreprocessor:
                 )
                 self.preprocessing_steps.append(f"Split data without stratification: {len(X_train)} train, {len(X_test)} test")
                 if min_class_count < 2:
-                    st.warning(f"⚠️ Some classes have very few samples. Stratification disabled.")
+                    st.warning(f"Some classes have very few samples. Stratification disabled.")
         except Exception as e:
             # Fallback to simple split
             X_train, X_test, y_train, y_test = train_test_split(
@@ -267,7 +267,7 @@ class DataPreprocessor:
             'feature_names': X_train.columns.tolist()
         }
         
-        st.success("✅ All preprocessing completed successfully!")
+        st.success("All preprocessing completed successfully!")
         
         return X_train, X_test, y_train, y_test, preprocessors
     
@@ -283,7 +283,7 @@ class DataPreprocessor:
     def display_preprocessing_summary(self):
         """Display a summary of preprocessing steps."""
         if self.preprocessing_steps:
-            st.subheader("📋 Preprocessing Summary")
+            st.subheader("Preprocessing Summary")
             for i, step in enumerate(self.preprocessing_steps, 1):
                 st.write(f"{i}. {step}")
 

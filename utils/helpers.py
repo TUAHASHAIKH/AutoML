@@ -12,7 +12,7 @@ def set_page_config():
     """Configure Streamlit page settings."""
     st.set_page_config(
         page_title="AutoML Classification System",
-        page_icon="🤖",
+        page_icon="🔬",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -22,30 +22,7 @@ def apply_custom_css():
     """Apply custom CSS styling."""
     st.markdown("""
         <style>
-        /* Hide GitHub icon and deploy button */
-        header[data-testid="stHeader"] {
-            background-color: transparent;
-        }
-        .stApp header {
-            background-color: transparent;
-        }
-        /* Hide the entire toolbar */
-        [data-testid="stToolbar"] {
-            display: none;
-        }
-        /* Alternative: Hide specific elements in toolbar */
-        button[kind="header"] {
-            display: none;
-        }
-        /* Hide GitHub link */
-        a[href*="github.com"] {
-            display: none !important;
-        }
-        /* Hide menu button */
-        [data-testid="stToolbar"] > button {
-            display: none;
-        }
-        
+        /* Main header */
         .main-header {
             font-size: 3rem;
             font-weight: bold;
@@ -53,18 +30,25 @@ def apply_custom_css():
             text-align: center;
             padding: 1rem 0;
         }
+        
+        /* Sub header */
         .sub-header {
             font-size: 1.5rem;
-            color: #666;
+            color: #666666;
             text-align: center;
             margin-bottom: 2rem;
         }
+        
+        /* Metric cards */
         .metric-card {
             background-color: #f0f2f6;
             padding: 1rem;
             border-radius: 0.5rem;
             margin: 0.5rem 0;
+            border: 1px solid #e0e0e0;
         }
+        
+        /* Progress bar */
         .stProgress > div > div > div > div {
             background-color: #1f77b4;
         }
@@ -74,7 +58,7 @@ def apply_custom_css():
 
 def display_header():
     """Display application header."""
-    st.markdown('<h1 class="main-header">🤖 AutoML Classification System</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">AutoML Classification System</h1>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Automated Machine Learning for Classification Tasks</p>', unsafe_allow_html=True)
     st.markdown("---")
 
@@ -86,6 +70,9 @@ def initialize_session_state():
     
     if 'eda_complete' not in st.session_state:
         st.session_state.eda_complete = False
+    
+    if 'issues_detected' not in st.session_state:
+        st.session_state.issues_detected = False
     
     if 'preprocessing_complete' not in st.session_state:
         st.session_state.preprocessing_complete = False
@@ -108,28 +95,32 @@ def initialize_session_state():
 
 def create_sidebar_navigation():
     """Create sidebar navigation menu."""
-    st.sidebar.title("📋 Navigation")
+    st.sidebar.title("Navigation")
+    
+    st.sidebar.markdown("---")
     
     steps = [
-        "📁 Upload Dataset",
-        "🔍 Exploratory Data Analysis",
-        "⚠️ Issue Detection",
-        "⚙️ Preprocessing",
-        "🤖 Model Training",
-        "📊 Model Comparison",
-        "📄 Generate Report"
+        "Upload Dataset",
+        "Exploratory Data Analysis",
+        "Issue Detection",
+        "Preprocessing",
+        "Model Training",
+        "Model Comparison",
+        "Generate Report"
     ]
     
     # Display progress
     progress_status = []
     if st.session_state.data_loaded:
-        progress_status.append("✅ Data Loaded")
+        progress_status.append("Data Loaded")
     if st.session_state.eda_complete:
-        progress_status.append("✅ EDA Complete")
+        progress_status.append("EDA Complete")
+    if st.session_state.get('issues_detected', False):
+        progress_status.append("Issues Detected")
     if st.session_state.preprocessing_complete:
-        progress_status.append("✅ Preprocessing Complete")
+        progress_status.append("Preprocessing Complete")
     if st.session_state.models_trained:
-        progress_status.append("✅ Models Trained")
+        progress_status.append("Models Trained")
     
     st.sidebar.subheader("Progress")
     if progress_status:
@@ -141,7 +132,7 @@ def create_sidebar_navigation():
     st.sidebar.markdown("---")
     
     # Information
-    st.sidebar.subheader("ℹ️ Information")
+    st.sidebar.subheader("Information")
     st.sidebar.info(
         """
         This AutoML system automates the entire machine learning pipeline:
@@ -222,22 +213,22 @@ def create_download_link(data, filename, text):
 
 def show_success_message(message):
     """Display a success message with custom styling."""
-    st.success(f"✅ {message}")
+    st.success(f"{message}")
 
 
 def show_warning_message(message):
     """Display a warning message with custom styling."""
-    st.warning(f"⚠️ {message}")
+    st.warning(f"{message}")
 
 
 def show_error_message(message):
     """Display an error message with custom styling."""
-    st.error(f"❌ {message}")
+    st.error(f"{message}")
 
 
 def show_info_message(message):
     """Display an info message with custom styling."""
-    st.info(f"ℹ️ {message}")
+    st.info(f"{message}")
 
 
 def create_expandable_section(title, content_func):
