@@ -92,7 +92,7 @@ def outlier_analysis(df, numerical_cols):
     Returns:
         dict: Dictionary containing outlier information
     """
-    st.subheader("📉 Outlier Detection")
+    st.subheader("Outlier Detection")
     
     outlier_info = {}
     
@@ -157,7 +157,7 @@ def correlation_analysis(df, numerical_cols):
         df: pandas DataFrame
         numerical_cols: List of numerical column names
     """
-    st.subheader("🔗 Correlation Matrix")
+    st.subheader("Correlation Matrix")
     
     # Compute correlation
     corr_matrix = df[numerical_cols].corr()
@@ -246,7 +246,7 @@ def categorical_analysis(df, categorical_cols):
         df: pandas DataFrame
         categorical_cols: List of categorical column names
     """
-    st.subheader("📊 Categorical Features Analysis")
+    st.subheader("Categorical Features Analysis")
     
     # Select columns to plot
     selected_cols = st.multiselect(

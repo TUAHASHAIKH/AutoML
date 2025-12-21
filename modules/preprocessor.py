@@ -134,7 +134,7 @@ class DataPreprocessor:
         
         # Scaling
         if self.numerical_cols:
-            st.subheader("📏 Feature Scaling")
+            st.subheader("Feature Scaling")
             config['scaling'] = st.selectbox(
                 "Select scaling method for numerical features:",
                 ["None", "StandardScaler (Z-score normalization)", "MinMaxScaler (0-1 normalization)"]

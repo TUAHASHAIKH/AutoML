@@ -34,7 +34,7 @@ def display_basic_info(df, target_column=None):
         df: pandas DataFrame
         target_column: Name of the target column for classification
     """
-    st.subheader("📊 Dataset Basic Information")
+    st.subheader("Dataset Basic Information")
     
     # Create columns for better layout
     col1, col2, col3 = st.columns(3)
@@ -62,7 +62,7 @@ def display_basic_info(df, target_column=None):
     
     # Class distribution (if target column is specified)
     if target_column and target_column in df.columns:
-        st.subheader("🎯 Class Distribution")
+        st.subheader("Class Distribution")
         class_dist = df[target_column].value_counts()
         
         col1, col2 = st.columns(2)
@@ -80,7 +80,7 @@ def display_basic_info(df, target_column=None):
             st.plotly_chart(fig, use_container_width=True)
     
     # Data preview
-    st.subheader("👀 Data Preview")
+    st.subheader("Data Preview")
     st.dataframe(df.head(10), use_container_width=True)
     
     return col_types

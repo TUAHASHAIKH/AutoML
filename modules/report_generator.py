@@ -326,7 +326,7 @@ class ReportGenerator:
             st.components.v1.html(html_report, height=800, scrolling=True)
         
         # Download buttons
-        st.subheader("💾 Download Report")
+        st.subheader("Download Report")
         
         col1, col2 = st.columns(2)
         

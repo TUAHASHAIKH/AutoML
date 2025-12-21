@@ -84,7 +84,7 @@ class ModelEvaluator:
         st.dataframe(styled_df, use_container_width=True)
         
         # Ranking
-        st.subheader("🏆 Model Rankings")
+        st.subheader("Model Rankings")
         
         col1, col2 = st.columns(2)
         
@@ -110,7 +110,7 @@ class ModelEvaluator:
         self.create_comparison_visualizations(comparison_df)
         
         # Download option
-        st.subheader("💾 Download Results")
+        st.subheader("Download Results")
         csv = comparison_df.to_csv(index=False)
         st.download_button(
             label="Download Comparison Table (CSV)",
