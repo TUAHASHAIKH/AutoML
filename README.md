@@ -96,5 +96,3 @@ This application is deployed on Streamlit Cloud:
 ## License
 This project is for educational purposes as part of CS-245 Machine Learning course.
 
-## Screenshots
-[Add screenshots here after implementation]
